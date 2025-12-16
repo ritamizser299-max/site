@@ -1,75 +1,18 @@
 /* ========================================
-   Admin Panel JavaScript - Secure Version
+   Admin Panel JavaScript
    ======================================== */
 
-// SECURITY: Hardcoded credentials (hashed)
-// Username: lorexdd
-// Password: ktBPHrAFyiUcv5@
+// Admin credentials
+// NOTE: This is client-side only. For production, use server-side auth.
 const ADMIN_CREDENTIALS = {
-    // SHA-256 hash of username with salt
-    usernameHash: 'e8f3d0c9a2b7f1e6d4c8a5b9e7f2d6c1a8b4e9f3d7c2a6b5e8f1d9c4a7b2e6f0',
-    // SHA-256 hash of password with salt
-    passwordHash: 'f9d2e7c4a8b3f6e1d5c9a2b7e4f8d3c6a1b9e5f2d8c7a4b6e9f1d3c5a8b2e7f4'
+    username: 'lorexdd',
+    password: 'ktBPHrAFyiUcv5@'
 };
 
-// Complex salt for additional security (used in hashing)
-const SECURITY_SALT = 'RobBob_2025_SecureAdmin_9x7k2m5n8p';
-
-// Secure hash function using SHA-256
-async function secureHash(input) {
-    // Check if crypto.subtle is available (requires HTTPS or localhost)
-    if (window.crypto && window.crypto.subtle) {
-        try {
-            const encoder = new TextEncoder();
-            const data = encoder.encode(input + SECURITY_SALT);
-            const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-            const hashArray = Array.from(new Uint8Array(hashBuffer));
-            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-        } catch (error) {
-            console.error('Crypto API error:', error);
-        }
-    }
-    
-    // Fallback: Simple hash for non-secure contexts (development only)
-    // This is not cryptographically secure but allows testing
-    return simpleHash(input + SECURITY_SALT);
-}
-
-// Simple fallback hash function (NOT cryptographically secure - for development only)
-function simpleHash(str) {
-    let hash = 0;
-    for (let i = 0; i < str.length; i++) {
-        const char = str.charCodeAt(i);
-        hash = ((hash << 5) - hash) + char;
-        hash = hash & hash; // Convert to 32bit integer
-    }
-    // Convert to hex string and pad to 64 characters
-    const hexHash = Math.abs(hash).toString(16);
-    return hexHash.padStart(64, '0').slice(0, 64);
-}
-
-// Verify credentials against hardcoded hashes
-async function verifyCredentials(username, password) {
-    const usernameHashInput = await secureHash(username);
-    const passwordHashInput = await secureHash(password);
-    
-    // Timing-safe comparison to prevent timing attacks
-    const usernameMatch = timingSafeEqual(usernameHashInput, ADMIN_CREDENTIALS.usernameHash);
-    const passwordMatch = timingSafeEqual(passwordHashInput, ADMIN_CREDENTIALS.passwordHash);
-    
-    return usernameMatch && passwordMatch;
-}
-
-// Timing-safe string comparison
-function timingSafeEqual(a, b) {
-    if (a.length !== b.length) {
-        return false;
-    }
-    let result = 0;
-    for (let i = 0; i < a.length; i++) {
-        result |= a.charCodeAt(i) ^ b.charCodeAt(i);
-    }
-    return result === 0;
+// Verify credentials
+function verifyCredentials(username, password) {
+    return username === ADMIN_CREDENTIALS.username &&
+           password === ADMIN_CREDENTIALS.password;
 }
 
 // Storage keys
@@ -209,7 +152,7 @@ function setupEventListeners() {
 }
 
 // Authentication
-async function handleLogin(e) {
+function handleLogin(e) {
     e.preventDefault();
     
     const username = usernameInput.value.trim();
@@ -223,7 +166,7 @@ async function handleLogin(e) {
     }
     
     // Verify credentials
-    const isValid = await verifyCredentials(username, password);
+    const isValid = verifyCredentials(username, password);
     
     if (isValid) {
         // Create secure session
